@@ -96,7 +96,7 @@ inputs:
     required: true
 ```
 
-The easiest way to customize these inputs is with [the `pkgcheck::use_github_action_pkgcheck()` function](https://docs.ropensci.org/pkgcheck/reference/use_github_action_pkgcheck.html) in R, the documentation of which includes the following example:
+The easiest way to customise these inputs is with [the `pkgcheck::use_github_action_pkgcheck()` function](https://docs.ropensci.org/pkgcheck/reference/use_github_action_pkgcheck.html) in R, the documentation of which includes the following example:
 
 ``` r
 use_github_action_pkgcheck (inputs = list (`post-to-issue` = "false"))
