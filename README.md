@@ -159,30 +159,9 @@ on:
     workflows: ["R-CMD-check.yaml"]
     types: [completed]
     branches: [main, master]
-
-name: pkgcheck
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref }}
-  cancel-in-progress: true
-
-jobs:
-  pkgcheck:
-    runs-on: ubuntu-latest
-    permissions:
-      issues: write
-    steps:
-      - name: Check if previous workflow succeeded
-        run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
-            echo "Previous workflow failed."
-            exit 1
-          fi
-        shell: bash
-
-      - name: Check package with rOpenSci's pkgcheck system
-        uses: ropensci-review-tools/pkgcheck-action@main
 ```
+
+To implement this, replace the `on` section of your `pkgcheck.yaml` workflow file with the above configuration. This example assumes you have a workflow named `R-CMD-check.yaml` in your `.github/workflows/` directory that triggers on pushes to the `main` or `master` branch. The workflow name should match the [`name`](https://github.com/r-lib/actions/blob/6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590/examples/check-standard.yaml#L8) field in that workflow file.
 
 ## Versions
 
