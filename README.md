@@ -96,7 +96,7 @@ inputs:
     required: true
 ```
 
-The easiest way to customise these inputs is with [the `pkgcheck::use_github_action_pkgcheck()` function](https://docs.ropensci.org/pkgcheck/reference/use_github_action_pkgcheck.html) in R, the documentation of which includes the following example:
+The easiest way to customize these inputs is with [the `pkgcheck::use_github_action_pkgcheck()` function](https://docs.ropensci.org/pkgcheck/reference/use_github_action_pkgcheck.html) in R, the documentation of which includes the following example:
 
 ``` r
 use_github_action_pkgcheck (inputs = list (`post-to-issue` = "false"))
@@ -144,6 +144,45 @@ This default behaviour protects your repository from malicious use of `pull_requ
 :warning::warning: ***Never use the `pull_request_target` trigger as this will allow forks to run arbitrary code with access to your repos secrets***:warning::warning: For more information see [here](https://securitylab.github.com/research/github-actions-preventing-pwn-requests/).
 
 The first time this action is run, {pkgcheck} results will be created in a new issue of your repository. By default, each subsequent run will then append results to the same issue. The issue may be closed at any time, and results will still appear.
+
+### Triggering the action after a long-running workflow
+
+The {pkgcheck} action may fail when it completes while other workflows are still running. This happens because {pkgcheck}'s [CI check](https://github.com/ropensci-review-tools/pkgcheck/blob/de6b8130c8986029cb099de9c3d1cd69430e4fd7/R/check-ci.R#L12-L13) fails when other workflows don't have a success status.
+
+To solve this, you can use the [`workflow_run`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run) trigger to make {pkgcheck} run only after a specific workflow has completed. This ensures all required checks finish before {pkgcheck} evaluates them.
+
+Here's an example configuration that triggers {pkgcheck} after [`R-CMD-check.yaml`](https://github.com/r-lib/actions/blob/v2-branch/examples/check-standard.yaml) completes:
+
+```yaml
+on:
+  workflow_run:
+    workflows: ["R-CMD-check.yaml"]
+    types: [completed]
+    branches: [main, master]
+
+name: pkgcheck
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  pkgcheck:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check if previous workflow succeeded
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" != "success" ]; then
+            echo "Previous workflow failed."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Check package with rOpenSci's pkgcheck system
+        uses: ropensci-review-tools/pkgcheck-action@main
+```
 
 ## Versions
 
