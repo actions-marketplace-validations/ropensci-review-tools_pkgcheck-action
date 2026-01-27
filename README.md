@@ -145,6 +145,24 @@ This default behaviour protects your repository from malicious use of `pull_requ
 
 The first time this action is run, {pkgcheck} results will be created in a new issue of your repository. By default, each subsequent run will then append results to the same issue. The issue may be closed at any time, and results will still appear.
 
+### Triggering the action after a long-running workflow
+
+The {pkgcheck} action may fail when it completes while other workflows are still running. This happens because {pkgcheck}'s [CI check](https://github.com/ropensci-review-tools/pkgcheck/blob/de6b8130c8986029cb099de9c3d1cd69430e4fd7/R/check-ci.R#L12-L13) fails when other workflows don't have a success status.
+
+To solve this, you can use the [`workflow_run`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_run) trigger to make {pkgcheck} run only after a specific workflow has completed. This ensures all required checks finish before {pkgcheck} evaluates them.
+
+Here's an example configuration that triggers {pkgcheck} after [`R-CMD-check.yaml`](https://github.com/r-lib/actions/blob/v2-branch/examples/check-standard.yaml) completes:
+
+```yaml
+on:
+  workflow_run:
+    workflows: ["R-CMD-check.yaml"]
+    types: [completed]
+    branches: [main, master]
+```
+
+To implement this, replace the `on` section of your `pkgcheck.yaml` workflow file with the above configuration. This example assumes you have a workflow named `R-CMD-check.yaml` in your `.github/workflows/` directory that triggers on pushes to the `main` or `master` branch. The workflow name should match the [`name`](https://github.com/r-lib/actions/blob/6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590/examples/check-standard.yaml#L8) field in that workflow file.
+
 ## Versions
 
 This action has no version tags, as you will always want to pass the newest {pkgcheck} available.
